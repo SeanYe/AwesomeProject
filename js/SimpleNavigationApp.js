@@ -1,101 +1,137 @@
+/**
+ * @flow
+ */
 'use strict';
 
 import React, { PropTypes } from 'react';
 import ReactNative from 'react-native';
 
-var {
-  Navigator,
+const {
   Text,
   TouchableHighlight,
   View,
   StyleSheet,
   NativeModules,
-  ScrollView
+  ScrollView,
+  ActivityIndicator
 } = ReactNative;
 
-type state = {
+type State = {
   content: string,
+  loading: boolean,
 }
 
 export default class SimpleNavigationApp extends React.Component {
+  state: State;
 
-  state = {
-    content: 'Hello world',
-    loading: false,
+  constructor(props: any) {
+    super(props);
+    this.state = {
+      content: 'Hello world',
+      loading: false,
+    };
   }
-  // loading 状态
-  _loadngContent = async (uri) => {
-    var mtHttpAndroid=NativeModules.MTHttpAndroid;
+
+  _loadingContent = async (uri: string) => {
+    const mtHttpAndroid = NativeModules.MTHttpAndroid;
     try {
-      var response= await mtHttpAndroid.get(uri);
-       this.setState({content:response.body,loading:false});    
+      const response = await mtHttpAndroid.get(uri);
+      setTimeout(() => {
+        this.setState({ content: response.body, loading: false });
+      }, 4000);
+
     } catch (error) {
-       this.setState({content:error.message,loading:false});     
+      setTimeout(() => {
+        this.setState({ content: error.message, loading: false });
+      }, 4000);
     }
   }
 
- _onPress=(uri)=>{
-       if (this.state.loading)
-          return;
-   
-      this.setState({content:"loading",loading:true});
-      this._loadngContent(uri);
- }
 
-//  style={styles.showPanel}
-  render() {  
+  _onPress = (uri: string) => {
+    if (this.state.loading)
+      return;
+
+    this.setState({ content: "loading", loading: true });
+    this._loadingContent(uri);
+  }
+
+  render() {
     return (
-     <View style={{flex: 1}}>
+      <View style={styles.container}>
         <ScrollView style={styles.showPanel} >
-              <Text >
-                {this.state.loading ? `正在加载中...` : this.state.content}
-              </Text>
-         </ScrollView>
+          {this.renderContent()}
+        </ScrollView>
 
         <View style={styles.controlArea} >
-            <View  style={styles.controlSplitArea}>
-              <TouchableHighlight style={styles.controlTouchArea} onPress={this._onPress.bind(this, 'https://www.baidu.com')}>
-              
-                <Text style={styles.controlText}>有效请求</Text>
-               </TouchableHighlight>
-            </View>
-            <View  style={styles.controlSplitArea}>  
-              <TouchableHighlight style={styles.controlTouchArea} onPress={this._onPress.bind(this, 'https://www.dd.com')}>
-                <Text style={styles.controlText}>无效请求</Text>
-              </TouchableHighlight>
-            </View>
+          <View  style={styles.controlSplitArea}>
+            <TouchableHighlight style={styles.controlTouchArea} onPress={this._onPress.bind(this, 'https://www.baidu.com') }>
+
+              <Text style={styles.controlText}>有效请求</Text>
+            </TouchableHighlight>
+          </View>
+          <View  style={styles.controlSplitArea}>
+            <TouchableHighlight style={styles.controlTouchArea} onPress={this._onPress.bind(this, 'https://www.dd.com') }>
+              <Text style={styles.controlText}>无效请求</Text>
+            </TouchableHighlight>
+          </View>
         </View>
       </View>
     )
   }
+
+  renderContent() {
+    if (this.state.loading) {
+      return (
+        <ActivityIndicator
+          animating={true}
+          style={styles.centering}
+          size="large"
+          color="white"
+        />
+      );
+    } else {
+      return (
+        <Text>
+          {this.state.content}
+        </Text>
+      );
+    }
+  }
 }
 
 var styles = StyleSheet.create({
-  showPanel:{
-    flex:3,
-    borderColor:'green',
-    borderStyle:'solid',
-    borderWidth:1,
-    margin:20,
+  container:{
+    flex: 1,
+  },
+  showPanel: {
+    flex: 3,
+    borderColor: 'green',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    margin: 20,
     backgroundColor: '#6A85B1',
   },
   controlArea: {
     flex: 1,
-    flexDirection:'row',
-    justifyContent:'space-between',
-    alignItems:'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
-  controlSplitArea:{
-    flex:1,
-    flexDirection:'row',
-    justifyContent:'center'
+  controlSplitArea: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
-  controlTouchArea:{
-    borderWidth:1,
-    borderColor:'blue'
+  controlTouchArea: {
+    borderWidth: 1,
+    borderColor: 'blue',
   },
-  controlText:{
-    paddingVertical:12,
-    paddingHorizontal:20
+  controlText: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  centering: {
+    padding: 8,
   }
 });
